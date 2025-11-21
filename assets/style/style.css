@@ -18,11 +18,11 @@ body {
   background: var(--crt-bg);
   color: var(--crt-green);
   font-family: "Press Start 2P", cursive;
-  overflow: hidden;
-  height: 100vh;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto; /* ← нормальный скролл */
   cursor: url("../images/cursor.png") 16 16, auto !important;
 }
-
 .container {
   padding: 40px;
   text-align: center;
