@@ -1,0 +1,465 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --crt-green: #0f0;
+  --crt-bg: #000000;
+  --card-off-brightness: 0.25;
+  --card-on-brightness: 1.1;
+  --scan-speed: 7s;
+}
+
+/* ------------------ BASE ------------------ */
+
+body {
+  background: var(--crt-bg);
+  color: var(--crt-green);
+  font-family: "Press Start 2P", cursive;
+  overflow: hidden;
+  height: 100vh;
+  cursor: url("../images/cursor.png") 16 16, auto !important;
+}
+
+.container {
+  padding: 40px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 0 0 8px var(--crt-green), 0 0 18px rgba(0, 255, 0, 0.7);
+}
+
+.subtitle {
+  margin-bottom: 30px;
+  opacity: 0.8;
+}
+
+/* ------------------ DROP ZONE ------------------ */
+
+.drop-zone {
+  margin: 30px auto;
+  padding: 20px;
+  border: 3px dashed var(--crt-green);
+  background: rgba(0, 255, 0, 0.05);
+  max-width: 600px;
+  font-size: 1rem;
+  opacity: 0.7;
+  transition: all 0.3s;
+}
+
+.drop-zone:hover {
+  opacity: 1;
+  background: rgba(0, 255, 0, 0.1);
+}
+
+/* ------------------ GALLERY ------------------ */
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  aspect-ratio: 1;
+  background: #111;
+  border: 4px solid #222;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  filter: brightness(var(--card-off-brightness));
+  transition:
+          filter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+          transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+          box-shadow 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+          border-color 0.4s ease-out;
+  box-shadow: 0 0 18px rgba(0, 255, 0, 0.25);
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+          transparent 55%,
+          rgba(0, 255, 0, 0.16) 60%,
+          transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 0.6s;
+  mix-blend-mode: screen;
+}
+
+/* «включённая лампа» */
+.card.powered {
+  filter: brightness(var(--card-on-brightness));
+  transform: translateY(-8px) scale(1.04);
+  border-color: var(--crt-green);
+  box-shadow:
+          0 0 25px rgba(0, 255, 0, 0.9),
+          0 0 60px rgba(0, 255, 0, 0.5);
+}
+
+.card.powered::after {
+  opacity: 0.45;
+}
+
+/* внутренний свет лампы с пульсацией */
+.card.powered::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+          circle at 50% 35%,
+          rgba(0, 255, 0, 0.5),
+          transparent 55%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+  animation:
+          lamp-on 0.4s ease-out forwards,
+          lamp-pulse 2.2s ease-in-out infinite 0.45s;
+}
+
+.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+/* ------------------ CRT OVERLAY ------------------ */
+
+.crt {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.12) 0px,
+          transparent 1px,
+          transparent 2px,
+          rgba(0, 0, 0, 0.12) 3px
+  );
+}
+
+/* двигающаяся скан-линия */
+.crt::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+          to bottom,
+          rgba(0, 255, 0, 0) 0%,
+          rgba(0, 255, 0, 0.3) 50%,
+          rgba(0, 255, 0, 0) 100%
+  );
+  mix-blend-mode: screen;
+  opacity: 0.15;
+  animation: scanline var(--scan-speed) linear infinite;
+}
+
+/* лёгкая виньетка по краям */
+.crt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.9);
+}
+
+#noise {
+  position: fixed;
+  inset: 0;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 9;
+}
+
+/* ------------------ MODAL ------------------ */
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-content {
+  position: relative;
+  background: #000;
+  padding: 30px 30px 26px;
+  border: 4px solid var(--crt-green);
+  border-radius: 16px;
+  text-align: center;
+  max-width: 90%;
+  box-shadow:
+          0 0 40px rgba(0, 255, 0, 0.9),
+          0 0 90px rgba(0, 255, 0, 0.5);
+}
+
+.modal img {
+  max-width: 100%;
+  image-rendering: pixelated;
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+
+.modal-info h2 {
+  margin-bottom: 10px;
+}
+
+.modal-info p {
+  font-size: 0.7rem;
+  margin-bottom: 16px;
+}
+
+.close {
+  position: absolute;
+  top: 8px;
+  right: 18px;
+  font-size: 2.4rem;
+  cursor: pointer;
+  text-shadow: 0 0 10px var(--crt-green);
+}
+
+.nav button {
+  background: none;
+  border: none;
+  color: var(--crt-green);
+  font-size: 2.4rem;
+  margin: 0 16px;
+  cursor: pointer;
+  text-shadow: 0 0 8px var(--crt-green);
+}
+
+/* кнопка скачивания */
+
+.download-btn {
+  margin-top: 18px;
+  padding: 10px 18px;
+  border: 2px solid var(--crt-green);
+  background: transparent;
+  color: var(--crt-green);
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+  transition:
+          background 0.25s,
+          color 0.25s,
+          transform 0.15s,
+          box-shadow 0.25s;
+}
+
+.download-btn:hover {
+  background: var(--crt-green);
+  color: #000;
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+}
+
+#snake-canvas {
+  display: none;
+  margin-top: 20px;
+  image-rendering: pixelated;
+  border: 4px solid var(--crt-green);
+  background: #000;
+}
+
+/* ------------------ PARTICLES ------------------ */
+
+.confetti {
+  position: fixed;
+  top: -20px;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  z-index: 999;
+  image-rendering: pixelated;
+}
+
+.spark {
+  position: fixed;
+  width: 4px;
+  height: 10px;
+  background: var(--crt-green);
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.9);
+  transform-origin: center;
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px rgba(0, 255, 0, 1));
+  z-index: 999;
+}
+
+/* ------------------ GLITCH ------------------ */
+
+.glitch {
+  animation: glitch 0.3s infinite;
+}
+
+/* ------------------ ANIMATIONS ------------------ */
+
+@keyframes glitch {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(2px, -2px);
+  }
+  60% {
+    transform: translate(-2px, -2px);
+  }
+  80% {
+    transform: translate(2px, 2px);
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes lamp-on {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  40% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.7;
+    filter: blur(3px);
+  }
+}
+/* ================= COOKIES MODAL ================= */
+
+.cookie-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.92);
+  z-index: 2000;
+}
+.cookie-modal.show {
+  display: flex;
+}
+
+.cookie-content {
+  background: #000;
+  border: 3px solid var(--crt-green);
+  padding: 30px;
+  max-width: 480px;
+  text-align: center;
+  border-radius: 16px;
+  box-shadow:
+          0 0 30px rgba(0,255,0,0.6),
+          0 0 60px rgba(0,255,0,0.4);
+}
+
+.cookie-content p {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.cookie-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: 2px solid var(--crt-green);
+  color: var(--crt-green);
+  cursor: pointer;
+  font-family: "Press Start 2P";
+}
+.cookie-btn:hover {
+  background: var(--crt-green);
+  color: #000;
+}
+
+/* ================= SHARE WIDGET ================= */
+
+.share-widget {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 1500;
+}
+
+.share-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 3px solid var(--crt-green);
+  color: var(--crt-green);
+  background: #000;
+  font-size: 1.6rem;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 14px rgba(0,255,0,0.7);
+  cursor: pointer;
+}
+
+.share-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: 0.3s;
+}
+
+.share-panel.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0);
+}
+
+.share-panel a {
+  width: 42px;
+  height: 42px;
+  border: 2px solid var(--crt-green);
+  color: var(--crt-green);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 12px rgba(0,255,0,0.3);
+  cursor: pointer;
+}
+.share-panel a:hover {
+  background: var(--crt-green);
+  color: #000;
+}
+
+
