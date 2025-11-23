@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://retro.vproger.ru/sitemap.xml
+
+Host: retro.vproger.ru
